@@ -1,7 +1,12 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { FaUser } from "react-icons/fa";
+import { register, reset } from "../features/auth/authSlice";
+import Spinner from "../components/Spinner";
 
-const Register = () => {
+function Register() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -10,6 +15,25 @@ const Register = () => {
   });
 
   const { name, email, password, password2 } = formData;
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { user, isLoading, isError, isSuccess, message } = useSelector(
+    (state) => state.auth
+  );
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(message);
+    }
+
+    if (isSuccess || user) {
+      navigate("/");
+    }
+
+    dispatch(reset());
+  }, [user, isError, isSuccess, message, navigate, dispatch]);
 
   const onChange = (e) => {
     setFormData((prevState) => ({
@@ -20,7 +44,23 @@ const Register = () => {
 
   const onSubmit = (e) => {
     e.preventDefault();
+
+    if (password !== password2) {
+      toast.error("Passwords do not match");
+    } else {
+      const userData = {
+        name,
+        email,
+        password,
+      };
+
+      dispatch(register(userData));
+    }
   };
+
+  if (isLoading) {
+    return <Spinner />;
+  }
 
   return (
     <>
@@ -28,7 +68,7 @@ const Register = () => {
         <h1>
           <FaUser /> Register
         </h1>
-        <p>Create an account.</p>
+        <p>Please create an account</p>
       </section>
 
       <section className="form">
@@ -51,7 +91,7 @@ const Register = () => {
               id="email"
               name="email"
               value={email}
-              placeholder="Enter your email address"
+              placeholder="Enter your email"
               onChange={onChange}
             />
           </div>
@@ -62,7 +102,7 @@ const Register = () => {
               id="password"
               name="password"
               value={password}
-              placeholder="Enter a new password"
+              placeholder="Enter password"
               onChange={onChange}
             />
           </div>
@@ -73,17 +113,19 @@ const Register = () => {
               id="password2"
               name="password2"
               value={password2}
-              placeholder="Confirm your password"
+              placeholder="Confirm password"
               onChange={onChange}
             />
           </div>
           <div className="form-group">
-            <button type="submit" className="btn btn-block">Submit</button>
+            <button type="submit" className="btn btn-block">
+              Submit
+            </button>
           </div>
         </form>
       </section>
     </>
   );
-};
+}
 
 export default Register;
